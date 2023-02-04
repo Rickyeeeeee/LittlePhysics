@@ -155,10 +155,9 @@ namespace LP {
 			Body* body = m_Bodies[i];
 			if (body->m_Type == BODY_TYPE::DYNAMIC)
 			{
-				body->F += Vec2{ 0.0f,-9.8f } *body->M;
+				body->F += Vec2{ 0.0f,-9.8f } * body->M;
 			}
 
-			m_Positions[i].c = body->m_Tranf.R.GetAngle();
 			m_Positions[i].c = body->m_Tranf.P;
 			m_Positions[i].a = body->m_Tranf.R.GetAngle();
 
@@ -170,7 +169,7 @@ namespace LP {
 		InitializeVelocityConstraints();
 
 		WarmStart();
-		for (uint32 iter = 0; iter < 10; iter++)
+		for (uint32 iter = 0; iter < 15; iter++)
 		{
 			SolveVelocityConstraints(dt);
 		}
@@ -179,7 +178,7 @@ namespace LP {
 		for (uint32 i = 0; i < m_BodyCount; i++)
 		{
 			m_Positions[i].c = m_Positions[i].c + m_Velocities[i].v * dt;
-			m_Positions[i].a = m_Positions[i].a + m_Velocities[i].w * dt * 1.0f;
+			m_Positions[i].a = m_Positions[i].a + m_Velocities[i].w * dt;
 		}
 
 		// Copy back data;
@@ -293,7 +292,7 @@ namespace LP {
 				body2->m_ContactEdges = ce2;
 			}
 		}
-
+		uint32 warmStartCount = 0;
 		Contact* contact = m_Contacts;
 		while (contact)
 		{
@@ -313,8 +312,8 @@ namespace LP {
 				// Adding Constraint
 				// contact->body1 = body1->m_ID;
 				// contact->body2 = body2->m_ID;
-				contact->normal = info.Normal.Normalize();
-				uint8 oldCount = contact->count;
+				contact->normal = info.Normal;
+				uint32 oldCount = contact->count;
 				if (info.Type == CONTACT_TYPE::EDGE_EDGE)
 					contact->count = 2;
 				else
@@ -323,14 +322,19 @@ namespace LP {
 #if WARM_START
 				if (info.Key.ID == contact->cID.ID && contact->count == oldCount)
 				{
+					warmStartCount++;
 				}
 				else
 				{
-					for (uint8 i = 0; i < 2; i++)
+					for (uint32 i = 0; i < 2; i++)
 					{
 						contact->cc[i].nc.impulse = 0.0f;
 						contact->cc[i].fc.impulse = 0.0f;
 					}
+				}
+				for (uint32 i = 0; i < 2; i++)
+				{
+					//contact->cc[i].fc.impulse = 0.0f;
 				}
 #else
 				for (uint32 i = 0; i < 2; i++)
@@ -341,7 +345,7 @@ namespace LP {
 #endif
 				contact->cID = info.Key;
 
-				for (uint8 i = 0; i < contact->count; i++)
+				for (uint32 i = 0; i < contact->count; i++)
 				{
 					contact->cc[i].depth = info.Depths[i];
 					contact->cc[i].r1 = info.Points[i] - body1->GetPosition();
@@ -354,9 +358,9 @@ namespace LP {
 				c.info = info;
 				m_ContactDebugs.push_back(c);
 			}
-			// Remove the contact
 			else
 			{
+			// Remove the contact
 				if (contact->m_Prev)
 					contact->m_Prev->m_Next = contact->m_Next;
 				else
@@ -386,6 +390,7 @@ namespace LP {
 			}
 			contact = nextContact;
 		}
+		//std::cout << warmStartCount << std::endl;
 	}
 
 	void World::InitializeVelocityConstraints()
@@ -409,7 +414,7 @@ namespace LP {
 				c->m2 = 0.0f;
 				c->i2 = 0.0f;
 			}
-			for (uint8 i = 0; i < c->count; i++)
+			for (uint32 i = 0; i < c->count; i++)
 			{
 				auto& cc = c->cc[i];
 				// friction constraint
@@ -438,7 +443,8 @@ namespace LP {
 				auto [v1, w1] = m_Velocities[c->index1];
 				auto [v2, w2] = m_Velocities[c->index2];
 				float vRel = n.Dot(v2 + cc.r2.Cross(w2) - v1 - cc.r1.Cross(w1));
-				nc.bias = -0.1f * vRel;
+				nc.bias = -0.0f * vRel;
+				//nc.bias = 0.0f;
 				//m_ContactConstraints[i] = cc;
 			}
 		}
@@ -453,10 +459,10 @@ namespace LP {
 		{
 			//auto cc = m_ContactConstraints[i];
 			auto& cc = *c;
-			cc.cc[0].fc.impulse *= 0.6f;
+			/*cc.cc[0].fc.impulse *= 0.6f;
 			cc.cc[0].nc.impulse *= 0.6f;
 			cc.cc[1].fc.impulse *= 0.6f;
-			cc.cc[1].nc.impulse *= 0.6f;
+			cc.cc[1].nc.impulse *= 0.6f;*/
 			uint32 index1 = c->index1;
 			uint32 index2 = c->index2;
 			Velocity v1 = m_Velocities[index1];
@@ -466,11 +472,10 @@ namespace LP {
 			float m2 = cc.m2;
 			float i2 = cc.i2;
 
-			for (uint8 i = 0; i < c->count; i++)
+			for (uint32 i = 0; i < c->count; i++)
 			{
 				auto nc = c->cc[i].nc;
 				auto fc = c->cc[i].fc;
-				float depth = c->cc[i].depth;
 				float lambda = nc.impulse;
 
 				v1.v = v1.v + nc.c1 * lambda * m1;
@@ -485,8 +490,8 @@ namespace LP {
 				v2.v = v2.v + fc.c2 * lambda * m2;
 				v2.w = v2.w + fc.a2 * lambda * i2;
 
-				//c->cc[i].nc.impulse = 0.0f;
-				//c->cc[i].fc.impulse = 0.0f;
+				// c->cc[i].nc.impulse = 0.0f;
+				// c->cc[i].fc.impulse = 0.0f;
 			}
 			m_Velocities[index1] = v1;
 			m_Velocities[index2] = v2;
@@ -507,11 +512,11 @@ namespace LP {
 			float m1 = cc.m1;
 			float i1 = cc.i1;
 			float m2 = cc.m2;
+			float i2 = cc.i2;
 			Velocity v1 = m_Velocities[index1];
 			Velocity v2 = m_Velocities[index2];
-			float i2 = cc.i2;
 
-			for (uint8 i = 0; i < c->count; i++)
+			for (uint32 i = 0; i < c->count; i++)
 			{
 				auto& nc = c->cc[i].nc;
 				auto& fc = c->cc[i].fc;
@@ -520,7 +525,8 @@ namespace LP {
 				float friction;
 				float newImpulse;
 
-				lambda = -nc.mc * (nc.c1.Dot(v1.v) + nc.a1 * v1.w + nc.c2.Dot(v2.v) + nc.a2 * v2.w - (depth - 0.01f) * 0.5f * dtinv - nc.bias);
+				lambda = -nc.mc * (nc.c1.Dot(v1.v) + nc.a1 * v1.w + nc.c2.Dot(v2.v) + nc.a2 * v2.w - ((depth - 0.1f)) * 0.05f * dtinv - nc.bias);
+				//lambda = -nc.mc * (nc.c1.Dot(v1.v) + nc.a1 * v1.w + nc.c2.Dot(v2.v) + nc.a2 * v2.w - (depth - 0.01f) * 0.2f * dtinv - nc.bias);
 				newImpulse = fmaxf(0.0f, nc.impulse + lambda);
 				lambda = newImpulse - nc.impulse;
 				nc.impulse = newImpulse;
@@ -530,9 +536,10 @@ namespace LP {
 				v2.v = v2.v + nc.c2 * lambda * m2;
 				v2.w = v2.w + nc.a2 * lambda * i2;
 
+
 				lambda = -fc.mc * (fc.c1.Dot(v1.v) + fc.a1 * v1.w + fc.c2.Dot(v2.v) + fc.a2 * v2.w);
-				//friction = nc.impulse * 2.0f;
-				friction = 1000.0f;
+				friction = nc.impulse * 0.5f;
+  				//friction = 10000.0f;
 				newImpulse = fmaxf(-friction, fminf(fc.impulse + lambda, friction));
 				lambda = newImpulse - fc.impulse;
 				fc.impulse = newImpulse;
@@ -543,8 +550,6 @@ namespace LP {
 				v1.w = v1.w + fc.a1 * lambda * i1;
 				v2.v = v2.v + fc.c2 * lambda * m2;
 				v2.w = v2.w + fc.a2 * lambda * i2;
-
-
 			}
 
 

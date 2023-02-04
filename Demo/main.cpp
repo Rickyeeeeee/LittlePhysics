@@ -94,7 +94,7 @@ int main()
 
 	Renderer::Camera camera;
 	camera.Position = { 0.0f, 0.0f };
-	camera.Zoom = 0.03f;
+	camera.Zoom = 0.01f;
 	world = new World();
 	std::vector <Body*> Bodies;
 	for (int i = 0; i < 3; i++)
@@ -108,16 +108,16 @@ int main()
 	}        
 
 
-	Bodies[0]->AttachBoxShape({ 100.0f, 1.0f });
+	Bodies[0]->AttachBoxShape({ 100.0f, 10.0f });
 	Bodies[0]->SetType(BODY_TYPE::STATIC);
-	Bodies[0]->SetPosition({ 0.0f, -22.0f });
+	Bodies[0]->SetPosition({ 0.0f, -100.0f });
 	////Bodies[0]->SetRotation(glm::radians(20.0f));
-	Bodies[1]->AttachBoxShape({ 1.0f, 100.0f });
+	Bodies[1]->AttachBoxShape({ 10.0f, 100.0f });
 	Bodies[1]->SetType(BODY_TYPE::STATIC);
-	Bodies[1]->SetPosition({ 20.0f, 0.0f });
-	Bodies[2]->AttachBoxShape({ 1.0f, 100.0f });
+	Bodies[1]->SetPosition({ 101.0f, 0.0f });
+	Bodies[2]->AttachBoxShape({ 10.0f, 100.0f });
 	Bodies[2]->SetType(BODY_TYPE::STATIC);
-	Bodies[2]->SetPosition({ -20.0f, 0.0f });
+	Bodies[2]->SetPosition({ -101.0f, 0.0f });
 	//Bodies[3]->AttachBoxShape({ 1.0f, 1.0f });
 	////Bodies[3]->AttachCircleShape(1.0f);
 	//Bodies[3]->SetType(BODY_TYPE::STATIC);
@@ -181,20 +181,24 @@ int main()
 			space = 0;
 		}
 
-		if (space == 2)
+		if (space > 0)
 		{
 			BodyCreateInfo info;
 			info.BodyType = BODY_TYPE::DYNAMIC;
 			//info.Friction = 100.0f;
-			info.Density = 10.0f;
+			info.Density = 0.5f;
 			auto* body = world->CreateBody(&info);
 			body->SetPosition(tran.P);
 			//body->SetRotation(glm::radians(30.0f));
-			if (space % 2 == 1)
-				body->AttachCircleShape(dist(rng));
+			if (space % 2 == 0)
+			{
+				//body->AttachCircleShape(dist(rng));
+				body->AttachCircleShape(4.0f);
+			//body->AttachBoxShape({ 2.0F, 2.0F });
+			}
 			else
 				//body->AttachBoxShape({ (float)dist(rng), (float)dist(rng) });
-			body->AttachBoxShape({ 3.0F, 3.0F });
+				body->AttachBoxShape({ 4.0F, 4.0F });
 			Bodies.push_back(body);
 		}
 		if (degree >= 360.0f)
@@ -208,7 +212,6 @@ int main()
 			Bodies.pop_back();
 			deleteBody = false;	
 		}
-		//world->StepImpulse(0.03f);
 		world->Step(0.03f);
 
 		//if (Bodies.size() > 1)

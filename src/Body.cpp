@@ -5,6 +5,8 @@ void LP::Body::ApplyForce(const Vec2& force)
 	F += force;
 }
 
+static float iratio = 1.0f;
+
 void LP::Body::AttachCircleShape(float r)
 {
 	if (m_Shape)
@@ -17,7 +19,7 @@ void LP::Body::AttachCircleShape(float r)
 	Area = m_Shape->GetArea();
 	M = Area * m_Density;
 	Minv = 1.0f / M;
-	I = m_Shape->GetInertia(m_Density);
+	I = iratio * m_Shape->GetInertia(m_Density);
 	Iinv = 1.0f / I;
 }
 
@@ -33,7 +35,7 @@ void LP::Body::AttachBoxShape(const Vec2& size)
 	Area = m_Shape->GetArea();
 	M = Area * m_Density;
 	Minv = 1.0f / M;
-	I = m_Shape->GetInertia(m_Density);
+	I = iratio * m_Shape->GetInertia(m_Density);
 	Iinv = 1.0f / I;
 }
 
@@ -52,7 +54,7 @@ void LP::Body::AttachPolygonShape(const Vec2* points, uint32 size)
 	Area = m_Shape->GetArea();
 	M = Area * m_Density;
 	Minv = 1.0f / M;
-	I = m_Shape->GetInertia(m_Density);
+	I = iratio * m_Shape->GetInertia(m_Density);
 	Iinv = 1.0f / I;
 }
 

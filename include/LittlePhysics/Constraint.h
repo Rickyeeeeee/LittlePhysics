@@ -77,7 +77,7 @@ namespace LP {
 		float i2;
 
 		// Constraints
-		uint8 count = 1;
+		uint32 count = 1;
 		ContactConstraint cc[2];
 	};
 

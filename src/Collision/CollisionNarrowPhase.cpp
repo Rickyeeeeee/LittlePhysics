@@ -696,7 +696,7 @@ namespace LP
 		info->Depths[1] = depth1;
 		info->Key.Feature.Edge1 = key1[0];
 		info->Key.Feature.Edge1 = key2[0];
-		info->Key.Feature.Order = flip;
+		info->Key.Feature.Order = 0;
 		if (cpSize == 1)
 			info->Type = CONTACT_TYPE::POINT_EDGE;
 		else

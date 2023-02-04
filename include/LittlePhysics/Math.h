@@ -154,13 +154,13 @@ namespace LP {
 	struct LP_API Rot
 	{
 		float Cos, Sin;
-		Rot() : Sin(0.0f), Cos(1.0f) {}
-		Rot(float angle) : Sin(sin(angle)), Cos(cos(angle)) {}
+		Rot() : Cos(1.0f), Sin(0.0f) {}
+		Rot(float angle) : Cos(cosf(angle)), Sin(sinf(angle)) {}
 		Rot(float cos, float sin) : Cos(cos), Sin(sin) {}
 		void Set(float angle)
 		{
-			Sin = sin(angle);
-			Cos = cos(angle);
+			Sin = sinf(angle);
+			Cos = cosf(angle);
 		}
 		Vec2 Axis() const
 		{
