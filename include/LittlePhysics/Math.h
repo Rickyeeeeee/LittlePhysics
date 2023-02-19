@@ -100,6 +100,11 @@ namespace LP {
 			return Vec2{ -x, -y };
 		}
 
+		bool operator != (const Vec2& v) const
+		{
+			return x != v.x || y != v.y;
+		}
+
 		inline Vec2 Normalize() const
 		{
 			return (*this) / Length();
@@ -148,6 +153,14 @@ namespace LP {
 			q.y = Ey.x * v.x + Ey.y * v.y;
 			return q;
 		}
+		Vec2& operator[](const uint32 i)
+		{
+			return (&Ex)[i];
+		}
+		Vec2 operator[](const uint32 i) const
+		{
+			return (&Ex)[i];
+		}
 		Vec2 Ex, Ey;
 	};
 
@@ -182,13 +195,36 @@ namespace LP {
 		{
 			return Rot{ Cos, -Sin };
 		}
+		Rot Inverse() const
+		{
+			return Rot{ Cos, -Sin };
+		}
 	};
 
 	struct LP_API Transform
 	{
 		Vec2 P = { 0.0f, 0.0f };
 		Rot R;
+		Vec2 operator* (const Vec2& p) const
+		{
+			Vec2 v;
+			v = R.GetMatrix() * p;
+			v = v + P;
+			return v;
+		}
+		Vec2 Reverse(const Vec2& p) const
+		{
+			Vec2 v = p;
+			v -= P;
+			v = (-R).GetMatrix() * v;
+			return v;
+		}
 	};
+
+	/*Vec2 operator *(float m, const Vec2& v)
+	{
+		return { v.x * m, v.y * m };
+	}*/
 
 	#define RotMatrix(rot) Mat2x2{ rot.Cos, -rot.Sin, rot.Sin, rot.Cos }
 }

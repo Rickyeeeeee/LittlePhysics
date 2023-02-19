@@ -1,6 +1,6 @@
 #include <LittlePhysics/CollisionBroadPhase.h>
 #include <LittlePhysics/CollisionNarrowPhase.h>
-#include <queue>
+#include <LittlePhysics/Stack.h>
 namespace LP {
 
     void DbvhTree::TestCollision(Index index)
@@ -89,7 +89,7 @@ namespace LP {
                 float Cost;
             };
 
-            std::queue<DFSNode> nodes;
+            Stack<DFSNode> nodes(8);
             {
                 auto& node = m_Nodes[m_Root];
                 float unionCost = Area(aabb, node.AaBb);
@@ -98,14 +98,14 @@ namespace LP {
                 bestNodeIndex = m_Root;
                 accumulateCost = unionCost - node.Area;
                 if (node.Child[0] != IndexNull)
-                    nodes.push({ node.Child[0], accumulateCost });
+                    nodes.Push({ node.Child[0], accumulateCost });
                 if (node.Child[1] != IndexNull)
-                    nodes.push({ node.Child[1], accumulateCost });
+                    nodes.Push({ node.Child[1], accumulateCost });
             }
-            while (!nodes.empty())
+            while (!nodes.Empty())
             {
-                DFSNode dfsNode = nodes.front();
-                nodes.pop();
+                const DFSNode& dfsNode = nodes.Top();
+                nodes.Pop();
                 auto& node = m_Nodes[dfsNode.Index];
                 float unionCost = Area(aabb, node.AaBb);
 
@@ -122,9 +122,9 @@ namespace LP {
                 if (childMinCost < bestCost)
                 {
                     if (node.Child[0] != IndexNull)
-                        nodes.push({ node.Child[0], accumulateCost });
+                        nodes.Push({ node.Child[0], accumulateCost });
                     if (node.Child[1] != IndexNull)
-                        nodes.push({ node.Child[1], accumulateCost });
+                        nodes.Push({ node.Child[1], accumulateCost });
                 }
             }
             auto& bestNode = m_Nodes[bestNodeIndex];

@@ -46,11 +46,12 @@ R"(
 	uniform vec2 center;
 	uniform float zoom;
 	uniform float radius;
+	uniform vec2 offset;
 	out vec2 uv;
 	void main()
 	{
 		uv = a_Position;
-		gl_Position = vec4((a_Position * radius + center) * zoom , 0.0, 1.0);
+		gl_Position = vec4((a_Position * radius + center + offset) * zoom , 0.0, 1.0);
 	}
 )";
 
@@ -60,6 +61,7 @@ R"(
 	layout (location = 0) out vec4 FragColor;
 	uniform float radius;
 	uniform vec3 color;
+	uniform float zoom;
 	uniform bool fill;
 	in vec2 uv;
 	void main()
@@ -67,7 +69,7 @@ R"(
 		float distance = 1.0 - length(uv);
 		float v = smoothstep(0.0, 0.01, distance); 
 		if (!fill) 
-			v *= (1.0 - step(0.05 / radius, distance));
+			v *= (1.0 - step(0.005 / radius / zoom, distance));
 		FragColor = vec4(color * v, v);
 	}
 )";
@@ -236,6 +238,7 @@ void Renderer::Begin(const Camera& camera)
 
 	glUseProgram(s_RendererData->CircleShaderProgram);
 	glUniform1f(glGetUniformLocation(s_RendererData->CircleShaderProgram, "zoom"), camera.Zoom);
+	glUniform2f(glGetUniformLocation(s_RendererData->CircleShaderProgram, "offset"), camera.Position.x, camera.Position.y);
 	
 	s_RendererData->LineVertices.clear();
 	s_RendererData->LineIndices.clear();

@@ -31,6 +31,7 @@ namespace LP {
 		float					Density;
 		float					Restitution = 0.5f;
 		float					Friction = 0.0f;
+		bool					FixRotation = false;
 	};
 
 	class LP_API Body
@@ -117,6 +118,7 @@ namespace LP {
 
 		COLLISION_SHAPE_TYPE	m_ShapeType;
 		BODY_TYPE				m_Type;
+		bool					m_FixRotation = false;
 
 		float Area;
 		float m_Density = 1.0f;
@@ -141,6 +143,7 @@ namespace LP {
 		//Velocity m_Velocity;
 
 		Transform m_Tranf;
+		float dPosition = 0.0f;
 		Body* m_Prev = nullptr;
 		Body* m_Next = nullptr;
 		// Keep a reference of contacts, doesn't allocate memory

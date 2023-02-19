@@ -42,12 +42,18 @@ namespace LP {
 			return m_ContactCount;
 		}
 		// Might be deleted
+		bool& GetSleep()
+		{
+			return m_EnableSleeping;
+		}
 	private:
 		void Initialize();
 		void Collide();
 		void InitializeVelocityConstraints();
-		void SolveVelocityConstraints(float dt);
+		void InitializePositionConstraints();
 		void WarmStart();
+		void SolveVelocityConstraints(float dt);
+		void SolvePositionConstraints(float dt);
 	private:
 		using Dispatcher 
 			= std::function<bool(LP::ContactInfo* info, LP::Shape* shapeA, LP::Shape* shapeB, 
@@ -60,14 +66,16 @@ namespace LP {
 		uint32					m_BodyCount = 0;
 		// For time stepping
 		Position				m_Positions[MAX_BODY];
+		Vec2					m_dPositions[MAX_BODY];
 		Velocity				m_Velocities[MAX_BODY];
 		Body*					m_Bodies[MAX_BODY];
 
 		
-		NormalConstraint		m_NormalConstraints[MAX_CONSTRAINT];
-		FrictionConstraint		m_FrictionConstraints[MAX_CONSTRAINT];
 		Contact					m_ContactConstraints[MAX_CONSTRAINT];
 		uint32					m_ContactCount;
 		Contact*				m_Contacts = nullptr;
+		bool					m_Sleeping = false;
+		bool					m_EnableSleeping = true;
+		uint32					m_SleepTime = 0;
 	};
 }

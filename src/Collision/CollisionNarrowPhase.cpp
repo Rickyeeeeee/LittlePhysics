@@ -232,7 +232,9 @@ namespace LP
 		int32 iteration = 0;
 		while (minDistance == HUGE_VALF && iteration <= 30)
 		{
-			//iteration++;
+			iteration++;
+			if (iteration == 29)
+            				return false;
 			for (PtNode* i = polytype; i != nullptr; i = i->next)
 			{
 				PtNode* j;
@@ -277,6 +279,7 @@ namespace LP
 			}
 		}
 		info->Normal = minNormal;
+			
 		info->Depths[0] = minDistance + 0.00001f;
 		return overlap;
 	}
@@ -392,31 +395,31 @@ namespace LP
 		//auto Support = 
 		bool overlap = GJK(center1, center2, [&points1, &points2, &size1, &size2](Vec2 dir)->Vec2 {
 			float Max = points1[0].Dot(dir);
-			uint32 Maxi = 0;
-			for (uint32 i = 1; i < size1; i++)
-			{
-				float value = points1[i].Dot(dir);
-				if (value > Max)
-				{
-					Maxi = i;
-					Max = value;
-				}
-			}
-			Vec2 ndir = -dir;
-			Max = points2[0].Dot(ndir);
-			uint32 Maxj = 0;
-			for (uint32 j = 1; j < size2; j++)
-			{
-				float value = points2[j].Dot(ndir);
-				if (value > Max)
-				{
-					Maxj = j;
-					Max = value;
-				}
-			}
-			return points1[Maxi] - points2[Maxj];
+uint32 Maxi = 0;
+for (uint32 i = 1; i < size1; i++)
+{
+	float value = points1[i].Dot(dir);
+	if (value > Max)
+	{
+		Maxi = i;
+		Max = value;
+	}
+}
+Vec2 ndir = -dir;
+Max = points2[0].Dot(ndir);
+uint32 Maxj = 0;
+for (uint32 j = 1; j < size2; j++)
+{
+	float value = points2[j].Dot(ndir);
+	if (value > Max)
+	{
+		Maxj = j;
+		Max = value;
+	}
+}
+return points1[Maxi] - points2[Maxj];
 			});
-		return overlap;
+			return overlap;
 	}
 
 	// Generate contact info
@@ -429,7 +432,10 @@ namespace LP
 		info->Depths[0] = r - dist.Length();
 		info->Normal = dist.Normalize();
 		info->Points[0] = circleA->Center + transA.P + info->Normal * circleA->Radius;
-		info->Type = CONTACT_TYPE::POINT_EDGE;
+		info->RefPoints[0].x = circleA->Radius;
+		info->RefPoints[1].x = circleB->Radius;
+		info->Count = 1;
+		info->Type = CONTACT_TYPE::CIRCLES;
 		info->Key.Feature.Type = CONTACT_COMBINATION::CIRCLE_CIRCLE;
 		info->Key.Feature.Edge1 = 0;
 		info->Key.Feature.Edge2 = 0;
@@ -446,33 +452,70 @@ namespace LP
 		p.x = std::max(std::min(c.x, max.x), min.x);
 		p.y = std::max(std::min(c.y, max.y), min.y);
 		//Vec2 dist = (c - p).Normalize();
-		if (c == p) 
+		float d1 = std::min(fabs(max.x - c.x), fabs(c.x - min.x));
+		float d2 = std::min(fabs(max.y - c.y), fabs(c.y - min.y));
+		if (d1 < d2)
 		{
-			float d1 = std::min(fabs(max.x - c.x), fabs(c.x - min.x));
-			float d2 = std::min(fabs(max.y - c.y), fabs(c.y- min.y));
+			info->RefPoints[0] = { max.x, min.y };
+			info->RefPoints[1] = { max.x, max.y };
+		}
+		else
+		{
+			info->RefPoints[0] = { max.x, max.y };
+			info->RefPoints[1] = { min.x, max.y };
+		}
+		if (c == p)
+		{
 			if (d1 < d2)
 			{
-				info->Normal = Vec2 { 1.0f, 0.0f };
+				info->Normal = Vec2{ 1.0f, 0.0f };
 				info->Depths[0] = d1 + circle->Radius;
 			}
 			else
 			{
-				info->Normal = Vec2 { 0.0f, 1.0f };
+				info->Normal = Vec2{ 0.0f, 1.0f };
 				info->Depths[0] = d2 + circle->Radius;
 			}
 			if (c.Dot(info->Normal) > 0.0f)
 			{
 				info->Normal *= -1.0f;
 			}
+			else
+			{
+				info->RefPoints[0] *= -1.0f;
+				info->RefPoints[1] *= -1.0f;
+			}
 			info->Normal = (transB.R).GetMatrix() * info->Normal;
 		}
 		else
 		{
-			info->Normal = (transB.R).GetMatrix() * (p - c).Normalize();
+			Vec2 normal = (p - c).Normalize();
+			if (fabs(normal.Dot(Vec2{ 1.0f, 0.0f })) > fabs(normal.Dot(Vec2{ 0.0f, 1.0f })))
+			{
+				info->RefPoints[0] = { max.x, min.y };
+				info->RefPoints[1] = { max.x, max.y };
+				if (normal.Dot(Vec2{ 1.0f, 0.0f }) > 0.0f)
+				{
+					info->RefPoints[0] = { min.x, max.y };
+					info->RefPoints[1] = { min.x, min.y };
+				}
+			}
+			else
+			{
+				info->RefPoints[0] = { max.x, max.y };
+				info->RefPoints[1] = { min.x, max.y };
+				if (normal.Dot(Vec2{ 0.0f, 1.0f }) > 0.0f)
+				{
+					info->RefPoints[1] = { max.x, min.y };
+					info->RefPoints[0] = { min.x, min.y };
+				}
+			}
+			info->Normal = (transB.R).GetMatrix() * normal;
 			info->Depths[0] = circle->Radius - (p - c).Length();
 		}
 		info->Points[0] = circle->Center + transA.P + info->Normal * circle->Radius;
-		info->Type = CONTACT_TYPE::POINT_EDGE;
+		info->Type = CONTACT_TYPE::EDGE_B;
+		info->Count = 1;
 		info->Key.Feature.Type = CONTACT_COMBINATION::CIRCLE_BOX;
 		info->Key.Feature.Edge1 = 0;
 		info->Key.Feature.Edge2 = 0;
@@ -617,10 +660,11 @@ namespace LP
 		info->Points[1] = cp[1];
 		info->Depths[0] = depth0;
 		info->Depths[1] = depth1;
-		if (cpSize == 1)
-			info->Type = CONTACT_TYPE::POINT_EDGE;
+		info->Count = cpSize;
+		if (flip)
+			info->Type = CONTACT_TYPE::EDGE_A;
 		else
-			info->Type = CONTACT_TYPE::EDGE_EDGE;
+			info->Type = CONTACT_TYPE::EDGE_B;
 		return true;
 	};
 	static inline bool Clip(ContactInfo* info, Vec2 e1[3], Vec2 e2[3], uint8 key1[2], uint8 key2[2])
@@ -697,10 +741,13 @@ namespace LP
 		info->Key.Feature.Edge1 = key1[0];
 		info->Key.Feature.Edge1 = key2[0];
 		info->Key.Feature.Order = 0;
-		if (cpSize == 1)
-			info->Type = CONTACT_TYPE::POINT_EDGE;
+		info->Count = cpSize;
+		info->RefPoints[0] = ref[1];
+		info->RefPoints[1] = ref[2];
+		if (!flip)
+			info->Type = CONTACT_TYPE::EDGE_A;
 		else
-			info->Type = CONTACT_TYPE::EDGE_EDGE;
+			info->Type = CONTACT_TYPE::EDGE_B;
 		return true;
 	};
 	static inline bool GetContactInfo(ContactInfo* info, Vec2* points1, uint32 size1, Vec2* points2, uint32 size2, const Vec2& n)
@@ -725,6 +772,8 @@ namespace LP
 		Vec2 dist = center2 - center1;
 		Mat2x2 ra = transA.R.GetMatrix();
 		Mat2x2 rb = transB.R.GetMatrix();
+		Mat2x2 raInv = (-transA.R).GetMatrix();
+		Mat2x2 rbInv = (-transB.R).GetMatrix();
 		Vec2 extend[4];
 		extend[0] = ra * box1->Size;
 		extend[1] = ra * Vec2{ box1->Size.x, -box1->Size.y };
@@ -774,6 +823,16 @@ namespace LP
 		// BestPoint(e2, points2, 4,-info->Normal);
 		// bool overlap = Clip(info, e1, e2);
 		bool overlap = GetContactInfo(info, points1, 4, points2, 4, info->Normal);
+		if (info->Type == CONTACT_TYPE::EDGE_A)
+		{
+			info->RefPoints[0] = raInv * (info->RefPoints[0] - center1);
+			info->RefPoints[1] = raInv * (info->RefPoints[1] - center1);
+		}
+		else
+		{
+			info->RefPoints[0] = rbInv * (info->RefPoints[0] - center2);
+			info->RefPoints[1] = rbInv * (info->RefPoints[1] - center2);
+		}
 		info->Key.Feature.Type = CONTACT_COMBINATION::BOX_BOX;
 		return overlap;
 	}
@@ -820,7 +879,34 @@ namespace LP
 			return count;
 		};
 		bool overlap = GJKwithEPA(info, center1, center2, SupportA, SupportB);
-		info->Type = CONTACT_TYPE::POINT_EDGE;
+
+		Vec2 p1 = points2[0];
+		Vec2 p2 = points2[1];
+		Vec2 p21 = (p2 - p1).Normalize();
+		float Max = Vec2(p21.y, -p21.x).Dot(-info->Normal);
+		uint32 BestP[2];
+		BestP[0] = 0;
+		BestP[1] = 1;
+		for (uint32 j = 1; j < size2; j++)
+		{
+			p1 = points2[j];
+			p2 = points2[(j + 1) % size2];
+			p21 = (p2 - p1).Normalize();
+			float mm = Vec2(p21.y, -p21.x).Dot(-info->Normal);
+			if (mm > Max)
+			{
+				BestP[0] = j;
+				BestP[1] = (j + 1) % size2;
+				Max = mm;
+			}
+		}
+		p1 = points2[BestP[0]];
+		p2 = points2[BestP[1]];
+		Mat2x2 rbInv = (-transB.R).GetMatrix();
+		info->RefPoints[0] = rbInv * (p1 - transB.P);
+		info->RefPoints[1] = rbInv * (p2 - transB.P);
+		info->Type = CONTACT_TYPE::EDGE_B;
+		info->Count = 1;
 		info->Points[0] = center1 + info->Normal * circle->Radius;
 		info->Key.Feature.Type = CONTACT_COMBINATION::CIRCLE_POLYGON;
 		info->Key.Feature.Edge1 = 0;
@@ -905,6 +991,18 @@ namespace LP
 		//// Find the reference edge
 		//overlap = Clip(info, e1, e2);
 		overlap = GetContactInfo(info, points1, size1, points2, size2, info->Normal);
+		Mat2x2 raInv = (-transA.R).GetMatrix();
+		Mat2x2 rbInv = (-transB.R).GetMatrix();
+		if (info->Type == CONTACT_TYPE::EDGE_A)
+		{
+			info->RefPoints[0] = raInv * (info->RefPoints[0] - center1);
+			info->RefPoints[1] = raInv * (info->RefPoints[1] - center1);
+		}
+		else
+		{
+			info->RefPoints[0] = rbInv * (info->RefPoints[0] - transB.P);
+			info->RefPoints[1] = rbInv * (info->RefPoints[1] - transB.P);
+		}
 		info->Key.Feature.Type = CONTACT_COMBINATION::BOX_POLYGON;
 		return overlap;
 	}
@@ -987,6 +1085,18 @@ namespace LP
 		//// Find the reference edge
 		//overlap = Clip(info, e1, e2);
 		overlap = GetContactInfo(info, points1, size1, points2, size2, info->Normal);
+		Mat2x2 raInv = (-transA.R).GetMatrix();
+		Mat2x2 rbInv = (-transB.R).GetMatrix();
+		if (info->Type == CONTACT_TYPE::EDGE_A)
+		{
+			info->RefPoints[0] = raInv * (info->RefPoints[0] - transA.P);
+			info->RefPoints[1] = raInv * (info->RefPoints[1] - transA.P);
+		}
+		else
+		{
+			info->RefPoints[0] = rbInv * (info->RefPoints[0] - transB.P);
+			info->RefPoints[1] = rbInv * (info->RefPoints[1] - transB.P);
+		}
 		info->Key.Feature.Type = CONTACT_COMBINATION::POLYGON_POLYGON;
 		return overlap;
 	}

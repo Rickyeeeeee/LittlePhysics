@@ -30,13 +30,19 @@ bool isFocus = true;
 int but = 1;
 
 using namespace LP;
-int  drawDbvhTreeLevel = -1;
+int  drawDbvhTreeLevel = 0;
 bool deleteBody = false;
+Renderer::Camera camera;
 
 World *world;
 
 
 int input[2] = { 0,0 };
+
+std::ostream& operator<<(std::ostream& os, const LP::Vec2& vec)
+{
+	return os << vec.x << ", " << vec.y;
+}
 
 int main()
 {
@@ -60,7 +66,9 @@ int main()
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-	
+	glfwSetScrollCallback(window, [](GLFWwindow* window, double xOffset, double yOffset) {
+		camera.Zoom += yOffset * 0.0005f + camera.Zoom * 0.04f * yOffset;
+		});
 	glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height) {
 		glViewport(0, 0, width, height);
 		});
@@ -92,7 +100,6 @@ int main()
 	ImGui_ImplOpenGL3_Init("#version 450");
 	glfwSwapInterval(1);
 
-	Renderer::Camera camera;
 	camera.Position = { 0.0f, 0.0f };
 	camera.Zoom = 0.01f;
 	world = new World();
@@ -101,8 +108,9 @@ int main()
 	{
 		BodyCreateInfo info;
 		info.BodyType = BODY_TYPE::STATIC;
-		info.Density = 10.0f;
-		info.Friction = 100.0f;
+		info.Density = 0.10f;
+		info.Restitution = 0.0f;
+		info.Friction = 0.1f;
 		auto body = world->CreateBody(&info);
 		Bodies.push_back(body);
 	}        
@@ -110,18 +118,14 @@ int main()
 
 	Bodies[0]->AttachBoxShape({ 100.0f, 10.0f });
 	Bodies[0]->SetType(BODY_TYPE::STATIC);
-	Bodies[0]->SetPosition({ 0.0f, -100.0f });
+	Bodies[0]->SetPosition({ 0.0f, -200.0f });
 	////Bodies[0]->SetRotation(glm::radians(20.0f));
-	Bodies[1]->AttachBoxShape({ 10.0f, 100.0f });
+	Bodies[1]->AttachBoxShape({ 11.0f, 200.0f });
 	Bodies[1]->SetType(BODY_TYPE::STATIC);
 	Bodies[1]->SetPosition({ 101.0f, 0.0f });
-	Bodies[2]->AttachBoxShape({ 10.0f, 100.0f });
+	Bodies[2]->AttachBoxShape({ 11.0f, 200.0f });
 	Bodies[2]->SetType(BODY_TYPE::STATIC);
 	Bodies[2]->SetPosition({ -101.0f, 0.0f });
-	//Bodies[3]->AttachBoxShape({ 1.0f, 1.0f });
-	////Bodies[3]->AttachCircleShape(1.0f);
-	//Bodies[3]->SetType(BODY_TYPE::STATIC);
-	//Bodies[3]->SetPosition({ 2.0f, 1.0f });
 	//std::vector<Vec2> vertices;
 	//vertices.push_back({ 0.0f, 1.0f });
 	//vertices.push_back({ -1.0f, 0.0f });
@@ -129,10 +133,8 @@ int main()
 	//vertices.push_back({ 1.0f, -1.0f });
 	//vertices.push_back({ 1.0f, 0.0f });
 	//Bodies[4]->AttachPolygonShape(vertices.data(), vertices.size());
-	////Bodies[4]->AttachBoxShape({ 1.0f, 2.0f });
-	////Bodies[4]->AttachCircleShape(1.0f);
-	//Bodies[4]->SetType(BODY_TYPE::STATIC);
-	//Bodies[4]->SetPosition({ -5.0f, 3.0f });
+	//Bodies[3]->AttachBoxShape({ 4.0f, 4.0f });
+	//Bodies[4]->AttachCircleShape(1.0f);
 
 	//Bodies[5]->AttachBoxShape({ 1.0f, 3.0f });
 	//Bodies[5]->SetType(BODY_TYPE::STATIC);
@@ -146,11 +148,13 @@ int main()
 
 	std::random_device dev;
 	std::mt19937 rng(dev());
-	std::uniform_real_distribution<> dist(0.5f, 3.0f);
+	std::uniform_real_distribution<> dist(1.0f, 8.0f);
+	double lastPos[2];
 
 	// Imgui control variables
-	bool showContactPoints = false;
-	bool showContactNormals = false;
+	bool showContactPoints = true;
+	bool showContactNormals = true;
+	bool showLocalPoints = true;
 	while (!glfwWindowShouldClose(window))
 	{
 		float currentTime = glfwGetTime();
@@ -171,7 +175,18 @@ int main()
 			 tran.P /= Vec2{ width, height } / 2.0f;
 			 tran.P *= { 1.0f, -1.0f };
 			 tran.P /= camera.Zoom;
-		//degree += 0.5f;
+			 tran.P.x -= camera.Position.x;
+			 tran.P.y -= camera.Position.y;
+		float deltaPos[2];
+		deltaPos[0] = pos[0] - lastPos[0];
+		deltaPos[1] = pos[1] - lastPos[1];
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == GLFW_PRESS)
+		{
+			float speed = 0.12f / camera.Zoom;
+			camera.Position.x += deltaPos[0] * dt * speed;
+			camera.Position.y -= deltaPos[1] * dt * speed;
+		}
+		static int lastspace = space;
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		{
 			space++;
@@ -181,24 +196,38 @@ int main()
 			space = 0;
 		}
 
-		if (space > 0)
+		if (space == 2)
 		{
 			BodyCreateInfo info;
 			info.BodyType = BODY_TYPE::DYNAMIC;
-			//info.Friction = 100.0f;
-			info.Density = 0.5f;
+			info.Friction = 0.1f;
+			info.FixRotation = true;
+			info.Restitution = 0.0f;
+			info.Density = 0.1f;
 			auto* body = world->CreateBody(&info);
 			body->SetPosition(tran.P);
 			//body->SetRotation(glm::radians(30.0f));
-			if (space % 2 == 0)
+			if (space % 3 == 1)
 			{
-				//body->AttachCircleShape(dist(rng));
-				body->AttachCircleShape(4.0f);
-			//body->AttachBoxShape({ 2.0F, 2.0F });
+				std::vector<Vec2> vertices;
+				float length = (float)dist(rng);
+				vertices.push_back({ 0.0f, length });
+				vertices.push_back({ -length, -length });
+				vertices.push_back({ length, -length });
+				body->AttachPolygonShape(vertices.data(), vertices.size());
+				//body->AttachCircleShape(3.0f);
 			}
+			else if (space % 3 == 2)
+				body->AttachBoxShape({(float)dist(rng), (float)dist(rng) });
+			//body->AttachBoxShape({ 4.0F, 4.0F });
 			else
-				//body->AttachBoxShape({ (float)dist(rng), (float)dist(rng) });
-				body->AttachBoxShape({ 4.0F, 4.0F });
+			{
+
+				body->AttachCircleShape(dist(rng));
+				//body->SetPosition(tran.P + Vec2{ 0.0f, 20.0f });
+			}
+				//body->AttachCircleShape(3.0f);
+				//body->AttachBoxShape({ 3.0F, 3.0F });
 			Bodies.push_back(body);
 		}
 		if (degree >= 360.0f)
@@ -212,11 +241,11 @@ int main()
 			Bodies.pop_back();
 			deleteBody = false;	
 		}
-		world->Step(0.03f);
+		world->Step(0.01);
 
 		//if (Bodies.size() > 1)
-			//Bodies[1]->SetPosition(tran.P);
-		//Bodies[0]->SetRotation(45.0f);
+			 //Bodies[3]->SetPosition(tran.P);
+		// Bodies[4]->SetRotation(40.0f);
 
 
 		const auto& contacts = world->GetContacts();
@@ -277,6 +306,12 @@ int main()
 
 		for (const auto& contact : contacts)
 		{
+
+		/*	std::cout << "Count: " << contact.info.Count << "\n";
+			std::cout << "Depths 1: " << contact.info.Depths[0] << "\n";
+			std::cout << "Ref Point[0]: " << contact.info.RefPoints[0] << "\n";
+			std::cout << "Ref Point[1]: " << contact.info.RefPoints[1] << "\n";*/
+
 			if (showContactNormals)
 			{
 				Renderer::DrawLine(contact.info.Points[0], contact.info.Normal * contact.info.Depths[0] * 10.0f, { 1.0f, 0.0f, 0.0f });
@@ -284,9 +319,23 @@ int main()
 			}
 			if (showContactPoints)
 			{
-				Renderer::DrawCircle(ToGLM(contact.info.Points[0]), 0.2f, { 1.0f, 0.0f, 0.0f });
+				Renderer::DrawCircle(ToGLM(contact.info.Points[0]), 0.6f, { 1.0f, 0.0f, 0.0f });
+				Renderer::DrawCircle(ToGLM(contact.info.Points[0]), 0.6f, { 1.0f, 0.0f, 0.0f });
 			}
-			if (contact.info.Type == LP::CONTACT_TYPE::EDGE_EDGE)
+			if (showLocalPoints)
+			{
+				if (contact.info.Type == CONTACT_TYPE::EDGE_A)
+				{
+					Renderer::DrawCircle(ToGLM(contact.BodyA->GetTransform() * contact.info.RefPoints[1]), 0.6f, { 1.0f, 0.0f, 1.0f });
+					Renderer::DrawCircle(ToGLM(contact.BodyA->GetTransform() * contact.info.RefPoints[0]), 0.6f, { 0.0f, 0.0f, 1.0f });
+				}
+				else
+				{
+					Renderer::DrawCircle(ToGLM(contact.BodyB->GetTransform() * contact.info.RefPoints[1]), 0.6f, { 1.0f, 0.0f, 1.0f });
+					Renderer::DrawCircle(ToGLM(contact.BodyB->GetTransform() * contact.info.RefPoints[0]), 0.6f, { 0.0f, 0.0f, 1.0f });
+				}
+			}
+			if (contact.info.Count > 1)
 			{
 				if (showContactNormals)
 				{
@@ -295,7 +344,7 @@ int main()
 				}
 				if (showContactPoints)
 				{
-					Renderer::DrawCircle(ToGLM(contact.info.Points[1]), 0.2f, { 1.0f, 0.0f, 0.0f });
+					Renderer::DrawCircle(ToGLM(contact.info.Points[1]), 0.6f, { 1.0f, 0.0f, 0.0f });
 				}
 			}
 		}
@@ -309,11 +358,13 @@ int main()
 			ImGui::Begin("Debug");
 			ImGui::Checkbox("Show Contact Points", &showContactPoints);
 			ImGui::Checkbox("Show Contact Normals", &showContactNormals);
+			ImGui::Checkbox("Show Local Points", &showLocalPoints);
 			ImGui::SliderInt("Draw Debug dbvhTree Level", &drawDbvhTreeLevel, -1, 5);
 			ImGui::Text("Total Body Count: %d.", world->GetBodyCount());
 			ImGui::Text("Total Collision Pair Count: %d", dbvhTree.GetCollisionPairsCount());
 			ImGui::Text("Total Contact Count: %d", world->GetContactCount());
 			ImGui::Text("Time: %.3f ms", dt * 1000.0f);
+			ImGui::Checkbox("Sleep", &world->GetSleep());
 			ImGui::End();
 		ImGui::EndFrame();
 		ImGui::Render();
@@ -322,6 +373,8 @@ int main()
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 		lastTime = currentTime;
+		lastPos[0] = pos[0];
+		lastPos[1] = pos[1];
 	}
 
 	glfwTerminate();

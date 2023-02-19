@@ -52,12 +52,12 @@ namespace LP
 		}
 		float Area(const AABB& aabb1, const AABB& aabb2)
 		{
-			Vec2 max, min;
-			max.x = fmaxf(aabb1.Max.x, aabb2.Max.x);
-			max.y = fmaxf(aabb1.Max.y, aabb2.Max.y);
-			min.x = fminf(aabb1.Min.x, aabb2.Min.x);
-			min.y = fminf(aabb1.Min.y, aabb2.Min.y);
-			return (max.x - min.x) * (max.y - min.y);
+			float maxX, maxY, minX, minY;
+			maxX = fmaxf(aabb1.Max.x, aabb2.Max.x);
+			maxY = fmaxf(aabb1.Max.y, aabb2.Max.y);
+			minX = fminf(aabb1.Min.x, aabb2.Min.x);
+			minY = fminf(aabb1.Min.y, aabb2.Min.y);
+			return (maxX - minX) * (maxY - minY);
 		}
 		AABB Union(const AABB& aabb1, const AABB& aabb2)
 		{

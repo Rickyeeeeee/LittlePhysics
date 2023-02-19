@@ -5,7 +5,7 @@ void LP::Body::ApplyForce(const Vec2& force)
 	F += force;
 }
 
-static float iratio = 1.0f;
+static float iratio = 10.0f;
 
 void LP::Body::AttachCircleShape(float r)
 {
@@ -64,6 +64,7 @@ LP::Body::Body(BodyCreateInfo* info)
 	m_Density = info->Density;
 	m_Restituion = info->Restitution;
 	m_Friction = info->Friction;
+	m_FixRotation = info->FixRotation;
 	M = m_Density * 1.0f;
 	Minv = 1.0f / M;
 	I = 1.0f;

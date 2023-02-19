@@ -26,7 +26,7 @@ namespace LP {
 
 	enum class CONTACT_TYPE
 	{
-		POINT_EDGE, EDGE_EDGE
+		CIRCLES, EDGE_A, EDGE_B
 	};
 	struct LP_API ContactInfo
 	{
@@ -35,6 +35,12 @@ namespace LP {
 		float Depths[2];
 		CONTACT_TYPE Type;
 		ContactIdentifier Key;
+		uint32 Count;
+
+		// if type is CIRCLES the x values are the radius 
+		// else this is the clip edge radius from center
+		Vec2 RefPoints[2]; 
+		Vec2 IncPoints[2];
 	};
 
 	struct LP_API ContactDebug

@@ -44,13 +44,21 @@ namespace LP {
 		ContactEdge* Next;
 	};
 
-	struct LP_API ContactConstraint
+	struct LP_API ContactVelocityConstraint
 	{
 		Vec2 r1;
 		Vec2 r2;
 		float depth;
 		normalConstraint nc;
 		frictionConstraint fc;
+	};
+
+	struct LP_API ContactPositionConstraint
+	{
+		Vec2 r1;
+		Vec2 r2;
+		float depth;
+		Vec2 normal;
 	};
 
 	struct LP_API Contact
@@ -78,54 +86,17 @@ namespace LP {
 
 		// Constraints
 		uint32 count = 1;
-		ContactConstraint cc[2];
-	};
-
-
-
-	struct LP_API NormalConstraint
-	{
-		// Inputs
-		Vec2 R1;
-		Vec2 R2;
-		Vec2 N;
-		Body* Body1;
-		Body* Body2;
-		uint32 index1;
-		uint32 index2;
-		float Depth;
-		float impulse = 0.0f;
-		float bias;
-
-		// Outputs
-		Vec2 C1;
-		float A1;
-		Vec2 C2;
-		float A2;
-		Velocity  B1;
-		Velocity  B2;
-	};
-
-	struct LP_API FrictionConstraint
-	{
-
-		Vec2 R1;
-		Vec2 R2;
-		Vec2 N;
-		Body* Body1;
-		Body* Body2;
-		uint32 index1;
-		uint32 index2;
-		float Depth;
-		float impulse = 0.0f;
-
-		// Outputs
-		Vec2 C1;
-		float A1;
-		Vec2 C2;
-		float A2;
-		Velocity  B1;
-		Velocity  B2;
+		ContactVelocityConstraint vc[2];
+		ContactPositionConstraint pc[2];
+		// For block solver
+		Mat2x2 mc;
+		Mat2x2 mcInv;
+		// For position constraints
+		Vec2 Points[2];
+		CONTACT_TYPE type;
+		Vec2 localPoints[2];
+		// For circles, this is the radius
+		// For edges, this is the relative radius
 	};
 
 }
