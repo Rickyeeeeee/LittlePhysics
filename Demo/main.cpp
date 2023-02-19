@@ -153,8 +153,9 @@ int main()
 
 	// Imgui control variables
 	bool showContactPoints = true;
-	bool showContactNormals = true;
-	bool showLocalPoints = true;
+	bool showContactNormals = false;
+	bool showLocalPoints = false;
+	bool simulating = true;
 	while (!glfwWindowShouldClose(window))
 	{
 		float currentTime = glfwGetTime();
@@ -196,12 +197,12 @@ int main()
 			space = 0;
 		}
 
-		if (space == 2)
+		if (space > 0)
 		{
 			BodyCreateInfo info;
 			info.BodyType = BODY_TYPE::DYNAMIC;
 			info.Friction = 0.1f;
-			info.FixRotation = true;
+			info.FixRotation = false;
 			info.Restitution = 0.0f;
 			info.Density = 0.1f;
 			auto* body = world->CreateBody(&info);
@@ -241,7 +242,8 @@ int main()
 			Bodies.pop_back();
 			deleteBody = false;	
 		}
-		world->Step(0.01);
+		if (simulating)
+			world->Step(0.01);
 
 		//if (Bodies.size() > 1)
 			 //Bodies[3]->SetPosition(tran.P);
@@ -356,6 +358,7 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 			ImGui::Begin("Debug");
+			ImGui::Text("Press space bar to randomly create objects from mouse position");
 			ImGui::Checkbox("Show Contact Points", &showContactPoints);
 			ImGui::Checkbox("Show Contact Normals", &showContactNormals);
 			ImGui::Checkbox("Show Local Points", &showLocalPoints);
@@ -365,6 +368,18 @@ int main()
 			ImGui::Text("Total Contact Count: %d", world->GetContactCount());
 			ImGui::Text("Time: %.3f ms", dt * 1000.0f);
 			ImGui::Checkbox("Sleep", &world->GetSleep());
+			if (ImGui::Button("Pause"))
+				simulating = simulating ? false : true;
+			if (ImGui::Button("Restart"))
+			{
+				uint32 count = Bodies.size() - 3;
+				for (uint32 i = 0; i < count; i++)
+				{
+					auto* body = Bodies.back();
+					world->DeleteBody(body);
+					Bodies.pop_back();
+				}
+			}
 			ImGui::End();
 		ImGui::EndFrame();
 		ImGui::Render();

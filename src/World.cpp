@@ -607,8 +607,7 @@ namespace LP {
 				v2.v = v2.v + fc.c2 * lambda * m2;
 				v2.w = v2.w + fc.a2 * lambda * i2;
 
-				// c->cc[i].nc.impulse = 0.0f;
-				// c->cc[i].fc.impulse = 0.0f;
+
 			}
 			m_Velocities[index1] = v1;
 			m_Velocities[index2] = v2;
