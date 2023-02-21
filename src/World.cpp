@@ -155,7 +155,7 @@ namespace LP {
 		delete body;
 	}
 
-	void World::Step(float dt)
+	void World::Step(float dt, uint32 velocityIterations, uint32 positionIterations)
 	{
 		float linearTolerance = 0.05f;
 		float angularTolerance = 0.1f;
@@ -218,7 +218,7 @@ namespace LP {
 		InitializeVelocityConstraints();
 
 		WarmStart();
-		for (uint32 iter = 0; iter < 10; iter++)
+		for (uint32 iter = 0; iter < velocityIterations; iter++)
 		{
 			SolveVelocityConstraints(dt);
 		}
@@ -238,7 +238,7 @@ namespace LP {
 				m_Positions[i].a = m_Positions[i].a + m_Velocities[i].w * dt;
 		}
 
-		for (uint32 iter = 0; iter < 6; iter++)
+		for (uint32 iter = 0; iter < positionIterations; iter++)
 		{
 			SolvePositionConstraints(dt);
 		}

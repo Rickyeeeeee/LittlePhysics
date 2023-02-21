@@ -22,7 +22,7 @@ namespace LP {
 		Body* CreateBody(BodyCreateInfo* info);
 		void DeleteBody(Body* body);
 		void StepImpulse(float dt);
-		void Step(float dt);
+		void Step(float dt, uint32 velocityIterations = 8, uint32 positionIterations = 3);
 		uint32 GetBodyCount() const
 		{
 			return m_BodyCount;

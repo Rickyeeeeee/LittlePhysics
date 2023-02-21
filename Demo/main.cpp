@@ -243,7 +243,7 @@ int main()
 			deleteBody = false;	
 		}
 		if (simulating)
-			world->Step(0.01);
+			world->Step(0.01, 8, 3);
 
 		//if (Bodies.size() > 1)
 			 //Bodies[3]->SetPosition(tran.P);
