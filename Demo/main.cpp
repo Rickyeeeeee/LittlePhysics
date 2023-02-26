@@ -152,7 +152,7 @@ int main()
 	double lastPos[2];
 
 	// Imgui control variables
-	bool showContactPoints = true;
+	bool showContactPoints = false;
 	bool showContactNormals = false;
 	bool showLocalPoints = false;
 	bool simulating = true;

@@ -2,7 +2,6 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-#include <list>
 namespace LP 	
 {
 	bool LP_API TestCollision(const Circle* circleA, const Circle* circleB, const Transform& transA, const Transform& transB)
@@ -143,8 +142,8 @@ namespace LP
 
 	struct PtNode
 	{
-		Vec2 point = { 0.0f };
-		PtNode* next = nullptr;
+		Vec2 point;
+		PtNode* next;
 	};
 
 	template <typename SupportFn1, typename SupportFn2>
@@ -163,8 +162,9 @@ namespace LP
 		bool overlap = false;
 		while (true)
 		{
-			SupportA(d, &p1, &dummy);
-			SupportB(-d, &p2, &dummy);
+			Vec2 dn = d.Normalize();
+			SupportA(dn, &p1, &dummy);
+			SupportB(-dn, &p2, &dummy);
 			Vec2 at = p1 - p2;
 			if (at.Dot(d) < 0.0f)
 				break;
@@ -224,13 +224,14 @@ namespace LP
 		polytype->next->point = simplex[1];
 		polytype->next->next = &ptNodePool[ptPoolSize++];
 		polytype->next->next->point = simplex[2];
+		polytype->next->next->next = nullptr;
 
 		PtNode* minIndex = polytype;
 		PtNode* minIndexi = polytype;
 		float minDistance = HUGE_VALF;
 		Vec2 minNormal{ 0.0f };
 		int32 iteration = 0;
-		while (minDistance == HUGE_VALF && iteration <= 30)
+		while (minDistance == HUGE_VALF )
 		{
 			iteration++;
 			if (iteration == 29)
@@ -851,7 +852,7 @@ return points1[Maxi] - points2[Maxj];
 		center2 /= size2;
 		auto SupportA = [&center1, radius = circle->Radius](Vec2 dir, Vec2* p1, Vec2* p2)->int32 {
 			Vec2 point1;
-			point1 = dir.Normalize() * radius + center1;
+			point1 = dir * radius + center1;
 			*p1 = point1;
 			return 1;
 		};

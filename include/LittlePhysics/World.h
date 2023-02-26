@@ -55,12 +55,15 @@ namespace LP {
 		void SolveVelocityConstraints(float dt);
 		void SolvePositionConstraints(float dt);
 	private:
+#if 0
 		using Dispatcher 
 			= std::function<bool(LP::ContactInfo* info, LP::Shape* shapeA, LP::Shape* shapeB, 
 							const LP::Transform& tranA, const LP::Transform& tranB)>;
-
+#else
+		typedef bool (*Dispather)(ContactInfo* info, Shape* shapeA, Shape* shapeB, const Transform& tranA, const Transform& tranB);
+#endif
 		std::vector<ContactDebug>	m_ContactDebugs;
-		Dispatcher				FindCollision[3][3];
+		Dispather				FindCollision[3][3];
 		DbvhTree				m_DbvhTree;
 		Body*					m_BodyList = nullptr;
 		uint32					m_BodyCount = 0;
