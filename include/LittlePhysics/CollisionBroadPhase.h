@@ -81,6 +81,6 @@ namespace LP
 		std::vector<CollisionPair> m_CollisionPairs;
 		DbvhNode					m_Nodes[MAX_NODES];
 		std::list<Index>			m_FreeNodes;
-		const float					m_EnlargeFactor = 1.2f;
+		const float					m_EnlargeFactor = 1.3f;
 	};
 }

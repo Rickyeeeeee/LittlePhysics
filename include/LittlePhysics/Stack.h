@@ -11,6 +11,7 @@ namespace LP {
 		Stack(uint32 capacity);
 		~Stack();
 		void Push(const T& data);
+		void Clear();
 		void Pop();
 		T& Top();
 		uint32 Size() const;
@@ -76,5 +77,10 @@ namespace LP {
 	inline bool Stack<T>::Empty() const
 	{
 		return m_Size == 0;
+	}
+	template<typename T>
+	inline void Stack<T>::Clear()
+	{
+		m_Size = 0;
 	}
 }

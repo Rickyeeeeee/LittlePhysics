@@ -89,7 +89,8 @@ namespace LP {
                 float Cost;
             };
 
-            Stack<DFSNode> nodes(8);
+            static Stack<DFSNode> nodes(8);
+            nodes.Clear();
             {
                 auto& node = m_Nodes[m_Root];
                 float unionCost = Area(aabb, node.AaBb);

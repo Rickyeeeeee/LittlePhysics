@@ -208,7 +208,7 @@ int main()
 			auto* body = world->CreateBody(&info);
 			body->SetPosition(tran.P);
 			//body->SetRotation(glm::radians(30.0f));
-			if (space % 3 == 1)
+			if (space % 3 == 3)
 			{
 				std::vector<Vec2> vertices;
 				float length = (float)dist(rng);

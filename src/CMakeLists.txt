@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
-add_library (LittlePhysics STATIC "LittlePhysics.cpp" "Collision/CollisionNarrowPhase.cpp" "World.cpp" "Body.cpp" "Shape.cpp" "Collision/CollisionBroadPhase.cpp" "Collision/CollisionManager.cpp")
+add_library (LittlePhysics STATIC "LittlePhysics.cpp" "Collision/CollisionNarrowPhase.cpp" "World.cpp" "Body.cpp" "Shape.cpp" "Collision/CollisionBroadPhase.cpp" "Collision/CollisionManager.cpp" "StackAllocator.cpp")
 
 target_include_directories(
 	LittlePhysics
