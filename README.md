@@ -1,5 +1,5 @@
 # LittlePhysics
-A 2D physics engine made from scratch as a study from Erin Cotto's papers and physics engine box2D.
+A 2D physics engine based on Erin Cotto's papers and physics engine box2D.
 ## Features
 - Collision detection for circles and polygons.
 - Rigidbody simulation using iterative impulse method.
