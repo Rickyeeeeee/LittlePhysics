@@ -1,6 +1,5 @@
 #pragma once
 
-#define LP_PLATFORM_WINDOWS
 #define LP_BUILD_DLL
 
 #define PI 3.14159265359

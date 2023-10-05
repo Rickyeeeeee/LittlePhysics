@@ -99,7 +99,7 @@ namespace LP {
 		{
 			auto* next = ce->Next;
 
-			Contact* contact = ce->Contact;
+			Contact* contact = ce->ContactPtr;
 
 			if (contact->m_Prev)
 				contact->m_Prev->m_Next = contact->m_Next;
@@ -354,7 +354,7 @@ namespace LP {
 
 				// insert on body1
 				auto* ce1 = &contact->ContactEdge1;
-				ce1->Contact = contact;
+				ce1->ContactPtr = contact;
 				ce1->Other = body2;
 				ce1->Prev = nullptr;
 				ce1->Next = body1->m_ContactEdges;
@@ -366,7 +366,7 @@ namespace LP {
 
 				// insert on body2
 				auto* ce2 = &contact->ContactEdge2;
-				ce2->Contact = contact;
+				ce2->ContactPtr = contact;
 				ce2->Other = body1;
 				ce2->Prev = nullptr;
 				ce2->Next = body2->m_ContactEdges;

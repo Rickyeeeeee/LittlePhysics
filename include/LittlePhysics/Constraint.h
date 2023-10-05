@@ -39,7 +39,7 @@ namespace LP {
 	struct LP_API ContactEdge
 	{
 		Body* Other;
-		Contact* Contact;
+		Contact* ContactPtr;
 		ContactEdge* Prev;
 		ContactEdge* Next;
 	};

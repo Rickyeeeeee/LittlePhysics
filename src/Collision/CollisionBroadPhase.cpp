@@ -85,7 +85,7 @@ namespace LP {
 
             struct DFSNode
             {
-                Index Index;
+                Index NodeIndex;
                 float Cost;
             };
 
@@ -107,7 +107,7 @@ namespace LP {
             {
                 const DFSNode& dfsNode = nodes.Top();
                 nodes.Pop();
-                auto& node = m_Nodes[dfsNode.Index];
+                auto& node = m_Nodes[dfsNode.NodeIndex];
                 float unionCost = Area(aabb, node.AaBb);
 
 
@@ -115,7 +115,7 @@ namespace LP {
 
                 if (unionCost + dfsNode.Cost < bestCost)
                 {
-                    bestNodeIndex = dfsNode.Index;
+                    bestNodeIndex = dfsNode.NodeIndex;
                     bestCost = unionCost + dfsNode.Cost;
                 }
 

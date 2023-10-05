@@ -3,7 +3,9 @@
 #
 cmake_minimum_required (VERSION 3.8)
 set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
 project ("LittlePhysics")
+
 
 # Include sub-projects.
 add_subdirectory ("glfw")
@@ -12,6 +14,9 @@ add_subdirectory ("imgui/imgui")
 #add_subdirectory ("LittlePhysicsEngine")
 add_subdirectory ("src")
 add_subdirectory ("Demo")
+if (WIN32)
+    target_compile_definitions(LittlePhysics PUBLIC LP_PLATFORM_WINDOWS)
+endif (WIN32)
 
 #set_target_properties(Demo PROPERTIES LINK_FLAGS "/PROFILE")
 target_include_directories(
